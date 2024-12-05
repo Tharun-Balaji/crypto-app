@@ -1,70 +1,260 @@
-# Getting Started with Create React App
+# 🚀 Crypto Screener React Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 📝 Project Overview
 
-## Available Scripts
+This Crypto Screener is a comprehensive React application designed for beginners and intermediate React learners. The project demonstrates various React concepts and provides a feature-rich cryptocurrency information platform.
 
-In the project directory, you can run:
+![crypto screener](image.png)
+![crypto details](image-1.png)
+![trending page](image-2.png)
+![saved page](image-3.png)
+![mobile view](image-5.png)
+![mobile view trending page](image-4.png)
+![mobile view crypto details page](image-6.png)
 
-### `npm start`
+## 🌟 Key Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Real-time Cryptocurrency Data**: Fetch and display up-to-date cryptocurrency information
+- **Search Functionality**: Easily find specific cryptocurrencies
+- **Sorting and Filtering**: Organize cryptocurrencies by various metrics
+- **Currency Conversion**: View prices in different local currencies
+- **Bookmarking**: Save and track your favorite cryptocurrencies
+- **Trending Coins**: Discover currently popular cryptocurrencies
+- **Interactive Charts**: Visualize cryptocurrency performance
+- **Mobile Responsive**: Fully responsive design for all device types
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠 Technologies and Libraries Used
 
-### `npm test`
+- **React JS** (Create React App)
+- **Tailwind CSS** for styling
+- **React Context API** for state management
+- **React Router** for navigation
+- **Recharts** for interactive charts
+- **CoinGecko API** for cryptocurrency data
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📂 Project Structure
 
-### `npm run build`
+```
+src/
+├── Pages/
+│   ├── Crypto.jsx
+│   ├── Home.jsx
+│   │   ├── Logo.jsx
+│   │   ├── Navigation.jsx
+│   │   └── Outlet.jsx
+│   ├── Saved.jsx
+│   │   ├── SaveButton.jsx
+│   │   └── Outlet.jsx
+│   └── Trending.jsx
+│       ├── TrendingCoin.jsx
+│       └── Outlet.jsx
+└── Context/
+    ├── CryptoContext.js
+    ├── StorageContext.js
+    └── TrendingContext.js
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🔑 Key React Concepts Demonstrated
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Context API Implementation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### CryptoContext.js
+A comprehensive example of using React Context for global state management:
 
-### `npm run eject`
+```javascript
+import { createContext, useEffect, useState } from "react";
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+export const CryptoContext = createContext({});
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+export function CryptoProvider({ children }) {
+  // State management for crypto data
+  const [CryptoData, setCryptoData] = useState();
+  const [searchData, setSearchData] = useState();
+  const [coinSearch, setCoinSearch] = useState("");
+  const [currency, setCurrency] = useState("usd");
+  const [sortBy, setSortBy] = useState("market_cap_desc");
+  const [page, setPage] = useState(1);
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+  // Async function to fetch cryptocurrency data
+  async function getData() {
+    try {
+      const data = await fetch(
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&ids=${coinSearch}&order=${sortBy}&per_page=${perPage}&page=${page}&sparkline=false&price_change_percentage=1h%2C24h%2C7d&locale=en&x_cg_demo_api_key=CG-xPTDuU1xWf9V99UybnaCu79t`
+      ).then((res) => res.json());
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+      setCryptoData(data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-## Learn More
+  // useEffect to trigger data fetching
+  useEffect(() => {
+    getData();
+  }, [coinSearch, currency, sortBy, page, perPage]);
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+  return (
+    <CryptoContext.Provider
+      value={{
+        CryptoData,
+        searchData,
+        currency,
+        setCurrency,
+        // ... other context values
+      }}
+    >
+      {children}
+    </CryptoContext.Provider>
+  );
+}
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### StorageContext.js
+Demonstrating local storage integration:
 
-### Code Splitting
+```javascript
+import { createContext, useContext, useLayoutEffect, useState, useEffect } from "react";
+import { CryptoContext } from "./CryptoContext";
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+export const StorageContext = createContext({});
 
-### Analyzing the Bundle Size
+export function StorageProvider({ children }) {
+  const [allCoins, setAllCoins] = useState([]);
+  const [savedData, setSavedData] = useState();
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+  const { currency, sortBy } = useContext(CryptoContext);
 
-### Making a Progressive Web App
+  // Function to save a coin to local storage
+  const saveCoin = (coinId) => {
+    let oldCoins = JSON.parse(localStorage.getItem("coins"));
+    
+    if (oldCoins.includes(coinId)) {
+      return null;
+    } else {
+      let newCoin = [...oldCoins, coinId];
+      setAllCoins(newCoin);
+      localStorage.setItem("coins", JSON.stringify(newCoin));
+    }
+  };
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+  // useLayoutEffect to initialize local storage
+  useLayoutEffect(() => {
+    let isThere = JSON.parse(localStorage.getItem("coins")) || false;
 
-### Advanced Configuration
+    if (!isThere) {
+      localStorage.setItem("coins", JSON.stringify([]));
+    } else {
+      let totalCoins = JSON.parse(localStorage.getItem("coins"));
+      setAllCoins(totalCoins);
+    }
+  }, []);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+  return (
+    <StorageContext.Provider
+      value={{
+        allCoins,
+        saveCoin,
+        savedData,
+      }}
+    >
+      {children}
+    </StorageContext.Provider>
+  );
+}
+```
 
-### Deployment
+### Routing Configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```javascript
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Home />,
+    children: [
+      {
+        path: "/",
+        element: <Crypto />,
+        children: [
+          {
+            path: ":coinID",
+            element: <CryptoDetails />,
+          },
+        ],
+      },
+      {
+        path: "/trending",
+        element: <Trending />,
+        children: [
+          {
+            path: ":coinId",
+            element: <CryptoDetails />
+          }
+        ]
+      },
+      {
+        path: "/saved",
+        element: <Saved />,
+      },
+    ],
+  },
+]);
+```
 
-### `npm run build` fails to minify
+## 🌐 Live Demo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Check out the live application: [Crypto Screener Demo](https://ephemeral-clafoutis-a06fc8.netlify.app/)
+
+## 🛡️ API Integration
+
+Uses CoinGecko's free API with a demo API key for:
+- Cryptocurrency market data
+- Trending coins
+- Coin details
+- Search functionality
+
+## 📦 Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or later)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/Tharun-Balaji/React.js.git
+   ```
+
+2. Navigate to the project directory
+   ```bash
+   cd React-Projects/crypto-app
+   ```
+
+3. Install dependencies
+   ```bash
+   npm install
+   ```
+
+4. Start the development server
+   ```bash
+   npm start
+   ```
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Tharun-Balaji/React.js/issues).
+
+## 📄 License
+
+This project is open source. Please check the original repository for specific licensing information.
+
+## 👨‍💻 Author
+
+Tharun Balaji
+
+## 🙏 Acknowledgements
+
+- [CoinGecko API](https://www.coingecko.com/en/api/documentation)
+- [React Documentation](https://reactjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
