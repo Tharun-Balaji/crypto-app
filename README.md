@@ -2,7 +2,7 @@
 
 ## 📝 Project Overview
 
-This Crypto Screener is a comprehensive React application designed for beginners and intermediate React learners. The project demonstrates various React concepts and provides a feature-rich cryptocurrency information platform.
+This Crypto Screener is a sophisticated React application that provides a real-world platform for exploring cryptocurrency market data. Designed as a full-featured web application, it demonstrates the practical implementation of modern React development techniques and web technologies.
 
 ![crypto screener](image.png)
 ![crypto details](image-1.png)
